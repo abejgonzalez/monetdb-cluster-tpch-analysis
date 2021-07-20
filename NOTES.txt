@@ -1,0 +1,15 @@
+How to profile
+--------------
+1. Dump all results from pystethoscope to a DB table
+2. Use SQL queries to filter based on `module` and `function`
+    a. Split things up by threads
+    b. Use the `state` = `end` to get the `usec` in that mod/func (assume `start` `state` is 0 `usec`)
+
+Can `tee` pystethoscope output
+Can add EXPLAIN to front of query, or PLAN, to get more information
+
+How to setup cluster (assuming N workers and 1 master)
+--------------------
+1. Have dbgen generate scaling factor split up into N workers
+2. On each worker, start a server using mserver5 (and load the data in)
+3. Link the tables back to the master (first create the remotes, then add the merges)

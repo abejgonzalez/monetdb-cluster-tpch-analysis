@@ -1,0 +1,3 @@
+[submodule "tpch-scripts"]
+	path = tpch-scripts
+	url = https://github.com/MonetDBSolutions/tpch-scripts.git
