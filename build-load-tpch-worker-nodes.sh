@@ -192,7 +192,7 @@ fi
 monetdbd set port="$port" "$farm_path"
 monetdbd start "$farm_path"
 # Load the data
-$root_directory/sf_build.sh SF-"$scale_factor" "$port" "$worker_id" "$scripts_directory/02_load"
+$root_directory/sf_build.sh SF-"$scale_factor" "$port" "$worker_id" "$scripts_directory/02_load"  $root_directory
 if [ $? != 0 ]; then
     echo "Data not loaded correctly"
     # Stop the daemon
@@ -203,6 +203,11 @@ fi
 monetdbd stop "$farm_path"
 
 echo "SF-$scale_factor loaded."
+
+# generate a .sql file with the remote table information
+$root_directory/create-remote-table-sql.py $scripts_directory/02_load/SF-$scale_factor/data/$worker_id $root_directory/remote_table.sql $scale_factor $port $worker_id $(hostname -I)
+
+# print example server start command
 server_startup_command
 
 # Go back to the original directory

@@ -6,12 +6,13 @@
 #
 # Copyright 2017-2018 MonetDB Solutions B.V.
 
-set -x
+#set -x
 
 # SF-"$scale_factor"
 # "$port"
 # "$worker_id"
 # "02_load directory"
+# root dir
 
 TIMEFORMAT="%R"
 if [ -z "$2" ]; then
@@ -24,7 +25,7 @@ monetdb -p "$port" destroy "$1" -f
 monetdb -p "$port" create "$1"
 monetdb -p "$port" release "$1"
 date
-time mclient -d "$1" -ei tpch_schema.sql
+time mclient -d "$1" -ei $4/tpch_schema.sql
 date
 
 # Generate the counts file if it does not exist or if its size is zero
@@ -57,3 +58,11 @@ else
     echo "Something went wrong. Review and then delete ${verify_file}"
     exit 1
 fi
+
+echo "Renaming tables"
+awk -f $5/rename.awk $1.counts > $1.rename
+sed -i "s/_NUMBER/_$3/" $1.rename
+
+time mclient -d "$1" -p "$port" -ei $1.rename
+rm -rf $1.rename
+date
