@@ -13,7 +13,7 @@ usage() {
 # $1 - server login (user@IP)
 # $2 - command
 run_impl () {
-    ssh -t $1 $2
+    ssh $1 $2
 }
 
 # run script over ssh
@@ -21,7 +21,7 @@ run_impl () {
 # $2 - local script
 # $2 - arguments to the script
 run_script_impl () {
-    ssh -t $1 'bash -s -l' < $2 "$3"
+    ssh $1 'bash -s -l' < $2 "$3"
 }
 
 # build server calls
@@ -93,6 +93,7 @@ done
 total_ip_addrs=${#ip_addr_arr[@]}
 for addr_idx in "${!ip_addr_arr[@]}"; do
     ip_addr="${ip_addr_arr[$addr_idx]}"
-    run_script $ip_addr monetdb-install.sh
+    # TODO: This is done in the instance launch script
+    #run_script $ip_addr sudo-monetdb-install.sh
     run_script $ip_addr build-load-tpch-worker-nodes.sh --worker-id $((addr_idx+1)) --total-workers $total_ip_addrs --sf $scaling_factor --farm $worker_farm_path
 done
