@@ -140,15 +140,18 @@ if [ ! -z "$verbose" ]; then
     set -x
 fi
 
-# Find the root directory of the TPC-H scripts
-if [ `uname` == "Darwin" ]
-then
-	root_directory=`python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' $0`
-else
-	root_directory=$(readlink -f $0)
-fi
-root_directory=${root_directory%${0:1}}
+## Find the root directory of the TPC-H scripts
+#if [ `uname` == "Darwin" ]
+#then
+#	root_directory=`python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' $0`
+#else
+#	root_directory=$(readlink -f $0)
+#fi
+#root_directory=${root_directory%${0:1}}
+root_directory=$HOME/monetdb-cluster-tpch-analysis
 echo "Root directory = $root_directory"
+
+pushd $root_directory
 
 scripts_directory=$root_directory/tpch-scripts
 
@@ -207,8 +210,13 @@ echo "SF-$scale_factor loaded."
 # generate a .sql file with the remote table information
 $root_directory/create-remote-table-sql.py $scripts_directory/02_load/SF-$scale_factor/data/$worker_id $root_directory/remote_table.sql $scale_factor $port $worker_id $(hostname -I)
 
-# print example server start command
-server_startup_command
+# server start command
+mserver5 \
+    --dbpath=$farm_path/SF-$scale_factor \
+    --set monet_vault_key=$farm_path/SF-$scale_factor/.vaultkey \
+    --set mapi_open=true \
+    --set mapi_port=50000 \
+    --set mapi_listenaddr=all &
 
 # Go back to the original directory
 popd

@@ -21,7 +21,12 @@ sudo wget --output-document=/etc/apt/trusted.gpg.d/monetdb.gpg https://www.monet
 sudo apt-key finger
 sudo apt update -y
 sudo apt install -y monetdb5-sql monetdb-client
-sudo usermod -a -G monetdb $USER
+for USER_ID in $(cat /etc/passwd | grep /home | cut -d ':' -f1); do
+    sudo usermod -a -G monetdb $USER_ID
+done
+
+# install other needed things
+sudo apt install -y git make rsync build-essential
 } 2>&1 | tee /tmp/machine-launchstatus.log
 
-echo "machine launch script completed" > /tmp/machine-launchstatus
+echo "machine launch script completed" >> /tmp/machine-launchstatus
