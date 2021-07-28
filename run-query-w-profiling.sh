@@ -2,7 +2,7 @@
 
 set -ex
 
-# Run query in $1.
+# Run query in DBNAME=$1 SQL_QUERY=$2.
 #  - Delete the profiling logs from before
 #  - Run query
 #  - Copy back results of profiling and put it in unique folder
@@ -29,8 +29,23 @@ run () {
     run_impl $SERVER "$@"
 }
 
+# TODO: for some reason cant do -dm in screen (leads to dead session)
+run_ps () {
+    SRVR=$1
+    shift
+    DB=$1
+    shift
+    FILE_PATH=$1
+    run $SRVR "rm -rf $FILE_PATH"
+    expect -c "spawn ssh -t $SRVR screen -m -S ps-session \"pystethoscope -d $DB -o $FILE_PATH\"
+    sleep 0.5
+    send -- \"d\"
+    expect eof"
+}
+
 REMOTE_WORK_DIR=$HOME/monetdb-cluster-tpch-analysis
-QUERY_FILE=$1
+QUERY_FILE=$2
+DB_NAME=$1
 BASE_NAME=$(basename $QUERY_FILE .sql)
 
 ip_addr_arr=()
@@ -41,13 +56,12 @@ screen -dmS ps-screen pystethoscope -d leader-db -o ps-log.txt
 for addr_idx in "${!ip_addr_arr[@]}"; do
     ip_addr="${ip_addr_arr[$addr_idx]}"
     ip_addr=$(echo "$ip_addr" | xargs)
-    run $ip_addr "rm -rf $REMOTE_WORK_DIR/ps-log.txt"
-    run $ip_addr "screen -dmS ps-screen pystethoscope -d SF-1 -o ps-log.txt"
+    run_ps $ip_addr $DB_NAME $REMOTE_WORK_DIR/ps-log.txt
 done
 
 mkdir -p results/$BASE_NAME
 
-mclient -d leader-db < $1 > results/$BASE_NAME/out
+mclient -d leader-db < $QUERY_FILE > results/$BASE_NAME/out
 
 for addr_idx in "${!ip_addr_arr[@]}"; do
     ip_addr="${ip_addr_arr[$addr_idx]}"
