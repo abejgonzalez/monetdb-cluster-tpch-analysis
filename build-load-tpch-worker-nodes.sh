@@ -216,16 +216,3 @@ $root_directory/create-remote-table-sql.py $scripts_directory/02_load/SF-$scale_
 
 # restart the daemon
 monetdbd start "$farm_path"
-
-exit 0
-
-# server start command
-mserver5 \
-    --dbpath=$farm_path/SF-$scale_factor \
-    --set monet_vault_key=$farm_path/SF-$scale_factor/.vaultkey \
-    --set mapi_open=true \
-    --set mapi_port=50000 \
-    --set mapi_listenaddr=all &
-
-# Go back to the original directory
-popd

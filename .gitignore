@@ -1,1 +1,6 @@
 .*.swp
+follower-ipaddrs.txt
+merge-repl-tables.sql
+remote_table/
+repl_remote_table/
+results/

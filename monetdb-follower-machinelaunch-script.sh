@@ -26,7 +26,13 @@ for USER_ID in $(cat /etc/passwd | grep /home | cut -d ':' -f1); do
 done
 
 # install other needed things
-sudo apt install -y git make rsync build-essential
+sudo apt install -y git make rsync build-essential screen
+
+# install pystethoscope
+sudo apt install -y python3-pip python3
+pip3 install monetdb-pystethoscope
 } 2>&1 | tee /tmp/machine-launchstatus.log
+
+echo "export PATH=/home/abegonzalez/.local/bin:\$PATH" >> /home/abegonzalez/.bashrc
 
 echo "machine launch script completed" >> /tmp/machine-launchstatus

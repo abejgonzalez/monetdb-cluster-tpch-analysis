@@ -59,4 +59,5 @@ do
     fi
 done
 
-echo "$list_output" > temp-ipaddr.txt
+# used across multiple scripts
+echo "$list_output" > follower-ipaddrs.txt

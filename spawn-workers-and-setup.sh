@@ -11,7 +11,7 @@ usage() {
 # $1 - src
 # $2 - dest
 copy () {
-    rsync -avzp -e 'ssh' $1 $2
+    rsync -azp -e 'ssh' $1 $2
 }
 
 # run command over ssh
@@ -108,8 +108,7 @@ echo "$disk_space GB of disk space per instance"
 # TODO: replace with different service
 # call spawn here
 ./gcp-spawn-followers.sh $num_workers $disk_space
-readarray ip_addr_arr < temp-ipaddr.txt
-rm -rf temp-ipaddr.txt
+readarray ip_addr_arr < follower-ipaddrs.txt
 
 echo "IP Addrs:"
 for addr_idx in "${!ip_addr_arr[@]}"; do

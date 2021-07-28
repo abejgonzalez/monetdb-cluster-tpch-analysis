@@ -20,4 +20,9 @@ do
     all_nodes="$all_nodes monetdb-worker-$id"
 done
 
-gcloud compute instances delete $all_nodes
+expect -c "spawn gcloud compute instances delete $all_nodes
+expect \"*Y/n*\"
+send \"\r\"
+expect \"*Y/n*\"
+send \"\r\"
+expect eof"
