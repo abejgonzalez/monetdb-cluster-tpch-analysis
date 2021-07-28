@@ -4,3 +4,4 @@ merge-repl-tables.sql
 remote_table/
 repl_remote_table/
 results/
+ps-log.txt
