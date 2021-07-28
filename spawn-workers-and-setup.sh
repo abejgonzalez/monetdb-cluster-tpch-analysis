@@ -18,7 +18,7 @@ copy () {
 # $1 - server login (user@IP)
 # $2 - command
 run_impl () {
-    ssh -o "StrictHostKeyChecking no" $1 $2
+    ssh -t -o "StrictHostKeyChecking no" $1 $2
 }
 
 # run script over ssh
@@ -31,7 +31,7 @@ run_script_impl () {
     SCRIPT=$1
     shift
     echo "$SERVER $SCRIPT $@"
-    ssh -o "StrictHostKeyChecking no" $SERVER 'bash -s -l' -- < $SCRIPT "$@"
+    ssh -t -o "StrictHostKeyChecking no" $SERVER 'bash -s -l' -- < $SCRIPT "$@"
 }
 
 # build server calls
@@ -118,6 +118,8 @@ done
 
 rm -rf remote_table
 mkdir -p remote_table
+rm -rf repl_remote_table
+mkdir -p repl_remote_table
 
 total_ip_addrs=${#ip_addr_arr[@]}
 for addr_idx in "${!ip_addr_arr[@]}"; do
@@ -128,10 +130,22 @@ for addr_idx in "${!ip_addr_arr[@]}"; do
 
     # copy back the fancy remote table stuff
     copy $(echo "$ip_addr" | xargs):$HOME/monetdb-cluster-tpch-analysis/remote_table.sql remote_table/remote_table_${addr_idx}.sql
+    copy $(echo "$ip_addr" | xargs):$HOME/monetdb-cluster-tpch-analysis/replicated.txt repl_remote_table/replicated_${addr_idx}.txt
 done
 
-echo "Done?"
+# create the dbfarm
+monetdbd stop ~/leader-dbfarm || true
+rm -rf ~/leader-dbfarm
+monetdbd create ~/leader-dbfarm
+monetdbd start ~/leader-dbfarm
+# create the db
+monetdb create leader-db
+monetdb release leader-db
 
-# run the client and add the remote tables
-#for
-#    mclien5 -d mdb-master
+for sql_f in remote_table/*; do
+    mclient -d leader-db < $sql_f
+done
+
+# create merge/replica tables and run
+./create-merge-repl-tables-sql.py remote_table/ repl_remote_table/ > merge-repl-tables.sql
+mclient -d leader-db < merge-repl-tables.sql

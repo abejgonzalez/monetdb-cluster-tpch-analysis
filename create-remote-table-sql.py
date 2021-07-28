@@ -9,6 +9,7 @@ scale_factor = sys.argv[3]
 port = sys.argv[4]
 worker_num = sys.argv[5]
 host = sys.argv[6]
+replicated_file = sys.argv[7]
 
 only_tbl_files = [f for f in os.listdir(output_table_dir) if os.path.isfile(os.path.join(output_table_dir, f))]
 
@@ -26,12 +27,13 @@ def create_remote_sql(name):
         schema = "( N_NATIONKEY INTEGER NOT NULL, N_NAME CHAR(25) NOT NULL, N_REGIONKEY INTEGER NOT NULL, N_COMMENT VARCHAR(152))"
     elif "region" in name:
         schema = "( R_REGIONKEY INTEGER NOT NULL, R_NAME CHAR(25) NOT NULL, R_COMMENT VARCHAR(152))"
+    elif "partsupp" in name:
+        # needs to be before part to get counted 1st
+        schema = "( PS_PARTKEY INTEGER NOT NULL, PS_SUPPKEY INTEGER NOT NULL, PS_AVAILQTY INTEGER NOT NULL, PS_SUPPLYCOST DECIMAL(15,2)  NOT NULL, PS_COMMENT VARCHAR(199) NOT NULL )"
     elif "part" in name:
         schema = "( P_PARTKEY INTEGER NOT NULL, P_NAME VARCHAR(55) NOT NULL, P_MFGR CHAR(25) NOT NULL, P_BRAND CHAR(10) NOT NULL, P_TYPE VARCHAR(25) NOT NULL, P_SIZE INTEGER NOT NULL, P_CONTAINER CHAR(10) NOT NULL, P_RETAILPRICE DECIMAL(15,2) NOT NULL, P_COMMENT VARCHAR(23) NOT NULL )"
     elif "supplier" in name:
         schema = "( S_SUPPKEY INTEGER NOT NULL, S_NAME CHAR(25) NOT NULL, S_ADDRESS VARCHAR(40) NOT NULL, S_NATIONKEY INTEGER NOT NULL, S_PHONE CHAR(15) NOT NULL, S_ACCTBAL DECIMAL(15,2) NOT NULL, S_COMMENT VARCHAR(101) NOT NULL)"
-    elif "partsupp" in name:
-        schema = "( PS_PARTKEY INTEGER NOT NULL, PS_SUPPKEY INTEGER NOT NULL, PS_AVAILQTY INTEGER NOT NULL, PS_SUPPLYCOST DECIMAL(15,2)  NOT NULL, PS_COMMENT VARCHAR(199) NOT NULL )"
     elif "customer" in name:
         schema = "( C_CUSTKEY INTEGER NOT NULL, C_NAME VARCHAR(25) NOT NULL, C_ADDRESS VARCHAR(40) NOT NULL, C_NATIONKEY INTEGER NOT NULL, C_PHONE CHAR(15) NOT NULL, C_ACCTBAL DECIMAL(15,2) NOT NULL, C_MKTSEGMENT CHAR(10) NOT NULL, C_COMMENT VARCHAR(117) NOT NULL)"
     elif "orders" in name:
@@ -54,3 +56,10 @@ with open(remote_table_file_sql, "w") as f:
         f.write(remote_sql_str)
         f.write("\n")
 
+with open(replicated_file, "w") as f:
+    for sql_f in only_tbl_files:
+        if sql_f.endswith(".tbl"):
+            table = sql_f[0:-4]
+            f.write(table + "\n")
+        else:
+            table = sql_f.replace(".tbl.", "_")

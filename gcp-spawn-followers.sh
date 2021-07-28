@@ -48,6 +48,8 @@ do
     [[ -z "$list_output" ]] || break
 done
 
+sleep 30
+
 # should iterate through the list and wait until the setup is complete
 for ip in $list_output;
 do

@@ -205,10 +205,19 @@ fi
 # Stop the daemon
 monetdbd stop "$farm_path"
 
+# Setup the daemon
+monetdbd set port=50000 "$farm_path"
+monetdbd set listenaddr=all "$farm_path"
+
 echo "SF-$scale_factor loaded."
 
 # generate a .sql file with the remote table information
-$root_directory/create-remote-table-sql.py $scripts_directory/02_load/SF-$scale_factor/data/$worker_id $root_directory/remote_table.sql $scale_factor $port $worker_id $(hostname -I)
+$root_directory/create-remote-table-sql.py $scripts_directory/02_load/SF-$scale_factor/data/$worker_id $root_directory/remote_table.sql $scale_factor $port $worker_id $(hostname -I) $root_directory/replicated.txt
+
+# restart the daemon
+monetdbd start "$farm_path"
+
+exit 0
 
 # server start command
 mserver5 \
