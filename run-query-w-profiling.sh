@@ -61,7 +61,7 @@ done
 
 mkdir -p results/$BASE_NAME
 
-mclient -d leader-db < $QUERY_FILE > results/$BASE_NAME/out
+mclient -d leader-db -f raw -w 80 -i < $QUERY_FILE > results/$BASE_NAME/out
 
 for addr_idx in "${!ip_addr_arr[@]}"; do
     ip_addr="${ip_addr_arr[$addr_idx]}"
