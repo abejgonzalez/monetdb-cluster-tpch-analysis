@@ -19,7 +19,31 @@ run_impl () {
 # run command on build server
 # $1 - command
 run () {
-    SERVER=$1
+    SRVR=$1
     shift
-    run_impl $SERVER "$@"
+    run_impl $SRVR "$@"
+}
+
+# run script over ssh
+# $1 - server login (user@IP)
+# $2 - local script
+# $3 - arguments to the script
+run_script_impl () {
+    SRVR=$1
+    shift
+    SCRPT=$1
+    shift
+    echo "$SRVR $SCRPT $@"
+    ssh -t -o "StrictHostKeyChecking no" $SRVR 'bash -s -l' -- < $SCRPT "$@"
+}
+
+# run script on build server
+# $1 - script
+# $1 - arguments to the script
+run_script () {
+    SRVR=$1
+    shift
+    SCRPT=$1
+    shift
+    run_script_impl $SRVR $SCRPT $@
 }

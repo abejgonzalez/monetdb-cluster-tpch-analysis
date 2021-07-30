@@ -2,58 +2,14 @@
 
 set -ex
 
+source remote-helper.sh
+
 usage() {
     echo "Usage: $0 --sf <scale factor> --farm <worker farm path> --num_workers <# workers>"
     echo "  Connect to N workers and set them up"
 }
 
-# copy files from server to server
-# $1 - src
-# $2 - dest
-copy () {
-    rsync -azp -e 'ssh' $1 $2
-}
 
-# run command over ssh
-# $1 - server login (user@IP)
-# $2 - command
-run_impl () {
-    ssh -t -o "StrictHostKeyChecking no" $1 $2
-}
-
-# run script over ssh
-# $1 - server login (user@IP)
-# $2 - local script
-# $3 - arguments to the script
-run_script_impl () {
-    SERVER=$1
-    shift
-    SCRIPT=$1
-    shift
-    echo "$SERVER $SCRIPT $@"
-    ssh -t -o "StrictHostKeyChecking no" $SERVER 'bash -s -l' -- < $SCRIPT "$@"
-}
-
-# build server calls
-
-# run command on build server
-# $1 - command
-run () {
-    SERVER=$1
-    shift
-    run_impl $SERVER "$@"
-}
-
-# run script on build server
-# $1 - script
-# $1 - arguments to the script
-run_script () {
-    SERVER=$1
-    shift
-    SCRIPT=$1
-    shift
-    run_script_impl $SERVER $SCRIPT $@
-}
 
 ip_addr_arr=()
 scaling_factor=
