@@ -71,6 +71,8 @@ def classify_function(module_name, function_name):
         combo_tuple == ("bat", "isSorted") or
         combo_tuple == ("bat", "isSortedReverse")):
         return "sort"
+    elif module_name == "remote":
+        return "remote"
 
     return "other"
 
@@ -117,22 +119,35 @@ for json in output_json_arr:
 del mod_func_usec_dict[(None, None)]
 del mod_func_usec_dict[("user", "main")]
 
+print("MAL Categorizations and Usec")
+print("----------------------------")
 cat_usec_dict = defaultdict(int)
 for i in mod_func_usec_dict.items():
     module = i[0][0]
     function = i[0][1]
+    usec = i[1]
     category = classify_function(module, function)
-    cat_usec_dict[category] += i[1]
-    print("{}.{} -> {} = {} usec".format(module, function, category, i[1]))
+    cat_usec_dict[category] += usec
+    print("{:<30} -> {:<15} = {} usec".format(module + "." + function, category, usec))
 
-print("Total usec: {}".format(cat_usec_dict))
+print("\nTotal Usec Per Category")
+print("-----------------------")
+for i in cat_usec_dict.items():
+    print("{:<20} -> {:<10}".format(i[0], i[1]))
 
 total = 0
 for i in cat_usec_dict.items():
     total += i[1]
 
+print("\nTotal Usec: {} usec".format(total))
+
 pct = {}
 for i in cat_usec_dict.items():
     pct[i[0]] = i[1] * 100 / total
 
-print("Percentage: {}".format(pct))
+print("\nPercentage Total Time Per Category")
+print("------------------------------------")
+for i in pct.items():
+    print("{:<20} -> {:<10}".format(i[0], i[1]))
+
+
