@@ -13,3 +13,10 @@ How to setup cluster (assuming N workers and 1 master)
 1. Have dbgen generate scaling factor split up into N workers
 2. On each worker, start a server using mserver5 (and load the data in)
 3. Link the tables back to the master (first create the remotes, then add the merges)
+
+# TODO: Recreate the profiling dumps for each and do max/min calcs
+#       Can you just sum on the threads? or do you take the max? Maybe determine this based on the total runtime?
+#       Stop and restart DBfarm to check if the imtermediate files are removed
+#
+
+
