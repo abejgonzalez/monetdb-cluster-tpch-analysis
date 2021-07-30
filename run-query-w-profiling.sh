@@ -59,7 +59,7 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
-if [ ! -z "$verbose" ]; then
+if [ ! -z "$VERBOSE" ]; then
     set -x
 fi
 
