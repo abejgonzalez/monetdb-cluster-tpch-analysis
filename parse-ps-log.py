@@ -72,7 +72,6 @@ def classify_function(module_name, function_name):
         combo_tuple == ("bat", "isSortedReverse")):
         return "sort"
 
-    print(f"Uncategorized: {module_name} {function_name}")
     return "other"
 
 output_json_arr = []
@@ -92,17 +91,41 @@ mod_func_usec_dict = defaultdict(int)
 for json in output_json_arr:
     mod_func_usec_dict[(json.get("module"), json.get("function"))] += json.get("usec")
 
+#for json in output_json_arr:
+#    if json.get("module") == "remote" and json.get("function") == "exec":
+#        # then the remote execution is the arg 2/3
+#        args = json.get("args")
+#        rem_module = args[2].get("value")
+#        rem_func = args[3].get("value")
+#        print("remote.exec: {}.{}".format(rem_module, rem_func))
+#        for arg in args:
+#            print("  {}".format(arg.get("value")))
+#    elif json.get("module") == "remote" and json.get("function") == "register":
+#        args = json.get("args")
+#        rem_module = args[2].get("value")
+#        rem_func = args[3].get("value")
+#        print("remote.register: {}.{}".format(rem_module, rem_func))
+#    #elif json.get("module") == "user":
+#    #    print(json)
+#    elif json.get("module") == "remote" and json.get("function") == "get":
+#        print(json)
+
+#print(mod_func_usec_dict)
+
+#sys.exit(1)
+
 del mod_func_usec_dict[(None, None)]
 del mod_func_usec_dict[("user", "main")]
 
 cat_usec_dict = defaultdict(int)
 for i in mod_func_usec_dict.items():
-    category = classify_function(i[0][0], i[0][1])
+    module = i[0][0]
+    function = i[0][1]
+    category = classify_function(module, function)
     cat_usec_dict[category] += i[1]
-    if category == "other":
-        print("Usec spent: {}".format(i[1]))
+    print("{}.{} -> {} = {} usec".format(module, function, category, i[1]))
 
-print(cat_usec_dict)
+print("Total usec: {}".format(cat_usec_dict))
 
 total = 0
 for i in cat_usec_dict.items():
@@ -112,4 +135,4 @@ pct = {}
 for i in cat_usec_dict.items():
     pct[i[0]] = i[1] * 100 / total
 
-print(pct)
+print("Percentage: {}".format(pct))
