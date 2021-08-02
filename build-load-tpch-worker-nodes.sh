@@ -195,7 +195,7 @@ fi
 monetdbd set port="$port" "$farm_path"
 monetdbd start "$farm_path"
 # Load the data
-$root_directory/sf_build.sh SF-"$scale_factor" "$port" "$worker_id" "$scripts_directory/02_load"  $root_directory
+$root_directory/sf_build.sh SF-"$scale_factor" "$port" "$worker_id"
 if [ $? != 0 ]; then
     echo "Data not loaded correctly"
     # Stop the daemon
