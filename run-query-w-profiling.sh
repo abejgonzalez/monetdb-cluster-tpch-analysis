@@ -122,7 +122,8 @@ for addr_idx in "${!ip_addr_arr[@]}"; do
     fi
 done
 
-mclient -d leader-db -f raw -w 80 -i < $QUERY_FILE > results/$BASE_NAME/out
+time mclient -d leader-db -f raw -w 80 -i < $QUERY_FILE > results/$BASE_NAME/out
+
 
 sleep 5
 
