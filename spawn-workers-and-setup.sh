@@ -13,18 +13,12 @@ usage() {
 
 ip_addr_arr=()
 scaling_factor=
-worker_farm_path=
 num_workers=
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --sf)
             scaling_factor=$2
-            shift
-            shift
-            ;;
-        --farm)
-            worker_farm_path=$2
             shift
             shift
             ;;
@@ -42,11 +36,6 @@ if [ -z "$scaling_factor" ]; then
     usage
     exit 1
 fi
-if [ -z "$worker_farm_path" ]; then
-    echo "Missing --farm"
-    usage
-    exit 1
-fi
 if [ -z "$num_workers" ]; then
     echo "Missing --num_workers"
     usage
@@ -55,7 +44,6 @@ fi
 
 
 echo "Scaling Factor: $scaling_factor"
-echo "Farm Path: $worker_farm_path"
 
 # in gbs
 disk_space=$(($(($scaling_factor/$num_workers))+20))
@@ -76,17 +64,29 @@ mkdir -p remote_table
 rm -rf repl_remote_table
 mkdir -p repl_remote_table
 
+worker-setup() {
+    local ip_addr=$1
+    local addr_idx=$2
+    {
+    run $ip_addr "echo \"Ping $ip_addr\""
+    copy $HOME/monetdb-cluster-tpch-analysis/ ${ip_addr}:$HOME/monetdb-cluster-tpch-analysis
+    run_script $ip_addr build-load-tpch-worker-nodes.sh --worker-id $((addr_idx+1)) --total-workers $total_ip_addrs --sf $scaling_factor
+
+    # copy back the fancy remote table stuff
+    copy ${ip_addr}:$HOME/monetdb-cluster-tpch-analysis/remote_table.sql remote_table/remote_table_${addr_idx}.sql
+    copy ${ip_addr}:$HOME/monetdb-cluster-tpch-analysis/replicated.txt repl_remote_table/replicated_${addr_idx}.txt
+    } 2>&1 | tee logs/${ip_addr}.log
+}
+
+mkdir -p logs
+
 total_ip_addrs=${#ip_addr_arr[@]}
 for addr_idx in "${!ip_addr_arr[@]}"; do
     ip_addr="${ip_addr_arr[$addr_idx]}"
-    run $ip_addr "echo \"Ping $ip_addr\""
-    copy $HOME/monetdb-cluster-tpch-analysis/ $(echo "$ip_addr" | xargs):$HOME/monetdb-cluster-tpch-analysis
-    run_script $ip_addr build-load-tpch-worker-nodes.sh --worker-id $((addr_idx+1)) --total-workers $total_ip_addrs --sf $scaling_factor --farm $worker_farm_path
-
-    # copy back the fancy remote table stuff
-    copy $(echo "$ip_addr" | xargs):$HOME/monetdb-cluster-tpch-analysis/remote_table.sql remote_table/remote_table_${addr_idx}.sql
-    copy $(echo "$ip_addr" | xargs):$HOME/monetdb-cluster-tpch-analysis/replicated.txt repl_remote_table/replicated_${addr_idx}.txt
+    ip_addr=$(echo "$ip_addr" | xargs)
+    worker-setup $ip_addr $addr_idx &
 done
+wait
 
 # create the dbfarm
 monetdbd stop ~/leader-dbfarm || true

@@ -75,7 +75,7 @@ run_remote_profiling_cleanup () {
     run $SRVR "pkill screen || true"
     run $SRVR "rm -rf $FILE_PATH"
     # wipe intermediate files that aren't cleaned
-    run $SRVR "monetdb stop $DB"
+    run $SRVR "monetdb stop $DB || true"
     run $SRVR "monetdb start $DB"
 }
 
@@ -98,11 +98,29 @@ BASE_NAME=$(basename $QUERY_FILE .sql)
 ip_addr_arr=()
 readarray ip_addr_arr < follower-ipaddrs.txt
 
+# setup trap handler to do the cleanup
+trap ctrl_c INT
+function ctrl_c() {
+    # clean up profiling
+    rm -rf ps-log.txt
+    pkill screen || true
+    # wipe intermediate files that aren't cleaned
+    monetdb stop leader-db || true
+    monetdb start leader-db
+
+    for addr_idx in "${!ip_addr_arr[@]}"; do
+        ip_addr="${ip_addr_arr[$addr_idx]}"
+        ip_addr=$(echo "$ip_addr" | xargs)
+        run_remote_profiling_cleanup $ip_addr $DB_NAME $REMOTE_WORK_DIR/ps-log.txt
+    done
+}
+
+
 # clean up profiling
 rm -rf ps-log.txt
 pkill screen || true
 # wipe intermediate files that aren't cleaned
-monetdb stop leader-db
+monetdb stop leader-db || true
 monetdb start leader-db
 
 # create results area
@@ -112,27 +130,40 @@ if [ -z "$PROFILE_DISABLE" ]; then
     screen -dmS ps-screen pystethoscope -d leader-db -o ps-log.txt
 fi
 
-for addr_idx in "${!ip_addr_arr[@]}"; do
-    ip_addr="${ip_addr_arr[$addr_idx]}"
-    ip_addr=$(echo "$ip_addr" | xargs)
+worker-setup() {
+    local ip_addr=$1
+    local addr_idx=$2
     run_remote_profiling_cleanup $ip_addr $DB_NAME $REMOTE_WORK_DIR/ps-log.txt
 
     if [ -z "$PROFILE_DISABLE" ]; then
         run_remote_ps $ip_addr $DB_NAME $REMOTE_WORK_DIR/ps-log.txt
     fi
+}
+
+for addr_idx in "${!ip_addr_arr[@]}"; do
+    ip_addr="${ip_addr_arr[$addr_idx]}"
+    ip_addr=$(echo "$ip_addr" | xargs)
+    worker-setup $ip_addr $addr_idx
 done
+#wait
 
 time mclient -d leader-db -f raw -w 80 -i < $QUERY_FILE > results/$BASE_NAME/out
 
-
 sleep 5
+
+copy-back() {
+    local ip_addr=$1
+    local addr_idx=$2
+    copy $ip_addr:$REMOTE_WORK_DIR/ps-log.txt results/$BASE_NAME/${addr_idx}-ps-log.txt
+}
 
 if [ -z "$PROFILE_DISABLE" ]; then
     for addr_idx in "${!ip_addr_arr[@]}"; do
         ip_addr="${ip_addr_arr[$addr_idx]}"
         ip_addr=$(echo "$ip_addr" | xargs)
-        copy $ip_addr:$REMOTE_WORK_DIR/ps-log.txt results/$BASE_NAME/${addr_idx}-ps-log.txt
+        copy-back $ip_addr $addr_idx &
     done
+    wait
     cp ps-log.txt results/$BASE_NAME/leader-ps-log.txt
 fi
 

@@ -7,7 +7,7 @@
 # Copyright 2017-2018 MonetDB Solutions B.V.
 
 # The path to the database farm
-farm_path=
+farm_path=$HOME/follower-dbfarm
 
 # The TPC-H scale factor
 sf=
@@ -80,11 +80,6 @@ while [ "$#" -gt 0 ]; do
             sf=$2
             # For scale factor smaller than 1, replace the '.' with '_' for the dbname
             scale_factor=${2//[.]/_}
-            shift
-            shift
-            ;;
-        -f|--farm)
-            farm_path=${2%/}
             shift
             shift
             ;;
@@ -195,7 +190,7 @@ fi
 monetdbd set port="$port" "$farm_path"
 monetdbd start "$farm_path"
 # Load the data
-$root_directory/sf_build.sh SF-"$scale_factor" "$port" "$worker_id"
+$scripts_directory/02_load/sf_build.sh SF-"$scale_factor" "$port" "$worker_id"
 if [ $? != 0 ]; then
     echo "Data not loaded correctly"
     # Stop the daemon
