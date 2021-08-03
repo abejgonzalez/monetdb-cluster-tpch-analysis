@@ -146,10 +146,11 @@ worker-setup() {
 for addr_idx in "${!ip_addr_arr[@]}"; do
     ip_addr="${ip_addr_arr[$addr_idx]}"
     ip_addr=$(echo "$ip_addr" | xargs)
-    worker-setup $ip_addr $addr_idx &
+    worker-setup $ip_addr $addr_idx
 done
-wait
+#wait
 
+echo "Running mclient for $QUERY_FILE"
 time mclient -d leader-db -f raw -w 80 -i < $QUERY_FILE > results/$BASE_NAME/out
 
 sleep 5
