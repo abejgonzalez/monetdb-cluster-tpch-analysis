@@ -102,16 +102,19 @@ readarray ip_addr_arr < follower-ipaddrs.txt
 trap ctrl_c INT
 function ctrl_c() {
     # clean up profiling
-    rm -rf ps-log.txt
     pkill screen || true
+    rm -rf ps-log.txt
     # wipe intermediate files that aren't cleaned
     monetdb stop leader-db || true
-    monetdb start leader-db
 
     for addr_idx in "${!ip_addr_arr[@]}"; do
         ip_addr="${ip_addr_arr[$addr_idx]}"
         ip_addr=$(echo "$ip_addr" | xargs)
-        run_remote_profiling_cleanup $ip_addr $DB_NAME $REMOTE_WORK_DIR/ps-log.txt
+        # clean up profiling
+        run $ip_addr "pkill screen || true"
+        run $ip_addr "rm -rf $REMOTE_WORK_DIR/ps-log.txt"
+        # wipe intermediate files that aren't cleaned
+        run $ip_addr "monetdb stop $DB_NAME || true"
     done
 }
 
