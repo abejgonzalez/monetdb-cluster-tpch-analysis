@@ -124,7 +124,7 @@ rm -rf ps-log.txt
 pkill screen || true
 # wipe intermediate files that aren't cleaned
 monetdb stop leader-db || true
-monetdb start leader-db
+monetdb start leader-db || true
 
 # create results area
 mkdir -p results/$BASE_NAME

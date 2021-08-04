@@ -209,5 +209,8 @@ echo "SF-$scale_factor loaded."
 # generate a .sql file with the remote table information
 $root_directory/create-remote-table-sql.py $scripts_directory/02_load/SF-$scale_factor/data/$worker_id $root_directory/remote_table.sql $scale_factor $port $worker_id $(hostname -I) $root_directory/replicated.txt
 
+# remove the files left after they have been loaded successfully (and remote table created)
+rm -rf $scripts_directory/02_load/SF-"$scale_factor"
+
 # restart the daemon
 monetdbd start "$farm_path"

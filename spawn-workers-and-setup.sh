@@ -5,11 +5,9 @@ set -ex
 source remote-helper.sh
 
 usage() {
-    echo "Usage: $0 --sf <scale factor> --farm <worker farm path> --num_workers <# workers>"
+    echo "Usage: $0 --sf <scale factor> --num_workers <# workers>"
     echo "  Connect to N workers and set them up"
 }
-
-
 
 ip_addr_arr=()
 scaling_factor=
@@ -27,7 +25,10 @@ while [ "$#" -gt 0 ]; do
             shift
             shift
             ;;
-
+        *)
+            usage
+            exit 1
+            ;;
     esac
 done
 
@@ -46,7 +47,7 @@ fi
 echo "Scaling Factor: $scaling_factor"
 
 # in gbs
-disk_space=$(($(($scaling_factor/$num_workers))+20))
+disk_space=$(($(($scaling_factor/$num_workers))*3+20))
 echo "$disk_space GB of disk space per instance"
 
 # TODO: replace with different service
