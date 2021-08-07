@@ -98,10 +98,18 @@ monetdbd start ~/leader-dbfarm
 monetdb create leader-db
 monetdb release leader-db
 
-for sql_f in remote_table/*; do
-    mclient -d leader-db < $sql_f
+exit 0
+
+# setup constraints for the shard tables
+for addr_idx in "${!ip_addr_arr[@]}"; do
+    ip_addr="${ip_addr_arr[$addr_idx]}"
+    ip_addr=$(echo "$ip_addr" | xargs)
+
+    ./create-remote-constraints-sql.py remote_table/ repl_remote_table/ follower-ipaddrs.txt $ip_addr > rem_${addr_idx}.sql
+    copy $HOME/monetdb-cluster-tpch-analysis/rem_${addr_idx}.sql ${ip_addr}:$HOME/monetdb-cluster-tpch-analysis/rem_${addr_idx}.sql
+    run "mclient -d SF-${scaling_factor} < $HOME/monetdb-cluster-tpch-analysis/rem_${addr_idx}.sql"
 done
 
 # create merge/replica tables and run
-./create-merge-repl-tables-sql.py remote_table/ repl_remote_table/ > merge-repl-tables.sql
-mclient -d leader-db < merge-repl-tables.sql
+./create-merge-repl-tables-sql.py remote_table/ repl_remote_table/ follower-ipaddrs.txt > generate-tables.sql
+mclient -d leader-db < generate-tables.sql

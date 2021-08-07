@@ -13,7 +13,7 @@ copy () {
 run_impl () {
     SRVR=$1
     shift
-    ssh -T -o "StrictHostKeyChecking no" $SRVR $@
+    ssh -T -o "StrictHostKeyChecking no" $SRVR -- $@
 }
 
 # run command on build server

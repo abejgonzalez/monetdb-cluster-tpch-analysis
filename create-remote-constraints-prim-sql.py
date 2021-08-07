@@ -15,6 +15,8 @@ all_worker_remote_tbls = sys.argv[1]
 all_repl_tbls = sys.argv[2]
 # file holding list of ipaddresses
 ipaddr_f = sys.argv[3]
+# ip address to generate sql file for
+target_ip = sys.argv[4]
 
 tbl_files = [f for f in os.listdir(all_worker_remote_tbls) if os.path.isfile(os.path.join(all_worker_remote_tbls, f))]
 repl_tbl_files = [f for f in os.listdir(all_repl_tbls) if os.path.isfile(os.path.join(all_repl_tbls, f))]
@@ -94,53 +96,13 @@ for tbl in construct_order:
 
     # create remote tables
     for idx, ip_addr in zip(range(1, worker_num + 1), ip_addrs):
-        strlist.append("CREATE REMOTE TABLE {}_{} ({}) on 'mapi:monetdb://{}:{}/{}';".format(
-            name,
-            idx,
-            schema,
-            ip_addr,
-            port_num,
-            db_name))
-
-        strlist.append("ALTER TABLE {}_{} ADD CONSTRAINT {}_pk_{} PRIMARY KEY ({});".format(
-            name,
-            idx,
-            name,
-            idx,
-            primary_key))
-
-        #for cnt, foreign_keytbl in enumerate(foreign_keytbl_list):
-        #    strlist.append("ALTER TABLE {}_{} ADD CONSTRAINT {}_fk_{}_{} FOREIGN KEY ({}) references {};".format(
-        #        name,
-        #        idx,
-        #        name,
-        #        idx,
-        #        cnt,
-        #        foreign_keytbl[0],
-        #        foreign_keytbl[1]))
-
-    # create merge/replica table def
-    strlist.append("CREATE {} TABLE {} ({});".format(
-        typ,
-        name,
-        schema))
-
-    strlist.append("ALTER TABLE {} ADD CONSTRAINT {}_pk PRIMARY KEY ({});".format(
-        name,
-        name,
-        primary_key))
-
-    #for cnt, foreign_keytbl in enumerate(foreign_keytbl_list):
-    #    strlist.append("ALTER TABLE {} ADD CONSTRAINT {}_fk_{} FOREIGN KEY ({}) references {};".format(
-    #        name,
-    #        name,
-    #        cnt,
-    #        foreign_keytbl[0],
-    #        foreign_keytbl[1]))
-
-    # add shards to table
-    for idx in range(1, worker_num + 1):
-        strlist.append("ALTER TABLE {} ADD TABLE {}_{};".format(name, name, idx))
+        if ip_addr == target_ip:
+            strlist.append("ALTER TABLE {}_{} ADD CONSTRAINT {}_pk_{} PRIMARY KEY ({});".format(
+                name,
+                idx,
+                name,
+                idx,
+                primary_key))
 
 for item in strlist:
     print(item)
