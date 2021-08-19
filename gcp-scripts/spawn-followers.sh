@@ -88,6 +88,9 @@ done
 
 sleep 30
 
+echo "Storing IP addresses in $ipaddr_file"
+echo "$list_output" > $ipaddr_file
+
 # should iterate through the instances and wait until the setup is complete
 for ip in $list_output;
 do
@@ -96,6 +99,3 @@ do
     done
     echo "Completed installing things on $ip"
 done
-
-echo "Storing IP addresses in $ipaddr_file"
-echo "$list_output" > $ipaddr_file

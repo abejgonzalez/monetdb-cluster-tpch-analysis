@@ -11,7 +11,7 @@ usage() {
 
 ip_addr_arr=()
 readarray ip_addr_arr < follower-ipaddrs.txt
-scaling_factor="10"
+scaling_factor="100"
 
 # setup constraints for the shard tables
 # first do all primary keys
@@ -24,7 +24,7 @@ for addr_idx in "${!ip_addr_arr[@]}"; do
     run $ip_addr "mclient -d SF-${scaling_factor} $HOME/monetdb-cluster-tpch-analysis/rem_prim_${addr_idx}.sql"
 done
 
-# then do rest
+# then setup foreign keys
 for addr_idx in "${!ip_addr_arr[@]}"; do
     ip_addr="${ip_addr_arr[$addr_idx]}"
     ip_addr=$(echo "$ip_addr" | xargs)

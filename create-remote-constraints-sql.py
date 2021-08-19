@@ -30,6 +30,7 @@ ip_addrs = []
 with open(ipaddr_f, 'r') as f:
     for line in f:
         ip_addrs.append(line.strip())
+follower_num = int(ip_addrs.index(target_ip)) + 1
 
 ## GET A SET OF REPLICA TABLES
 
@@ -95,55 +96,55 @@ for tbl in construct_order:
     foreign_keytbl_list = alter_meta[1]
 
     # create remote tables
-    for idx, ip_addr in zip(range(1, worker_num + 1), ip_addrs):
-        if ip_addr != target_ip:
-            strlist.append("CREATE REMOTE TABLE {}_{} ({}) on 'mapi:monetdb://{}:{}/{}';".format(
-                name,
-                idx,
-                schema,
-                ip_addr,
-                port_num,
-                db_name))
+    #for idx, ip_addr in zip(range(1, worker_num + 1), ip_addrs):
+    #    if ip_addr != target_ip:
+    #        strlist.append("CREATE REMOTE TABLE {}_{} ({}) on 'mapi:monetdb://{}:{}/{}';".format(
+    #            name,
+    #            idx,
+    #            schema,
+    #            ip_addr,
+    #            port_num,
+    #            db_name))
 
-            strlist.append("ALTER TABLE {}_{} ADD CONSTRAINT {}_pk_{} PRIMARY KEY ({});".format(
-                name,
-                idx,
-                name,
-                idx,
-                primary_key))
+    #        strlist.append("ALTER TABLE {}_{} ADD CONSTRAINT {}_pk_{} PRIMARY KEY ({});".format(
+    #            name,
+    #            idx,
+    #            name,
+    #            idx,
+    #            primary_key))
 
-        #for cnt, foreign_keytbl in enumerate(foreign_keytbl_list):
-        #    strlist.append("ALTER TABLE {}_{} ADD CONSTRAINT {}_fk_{}_{} FOREIGN KEY ({}) references {};".format(
-        #        name,
-        #        idx,
-        #        name,
-        #        idx,
-        #        cnt,
-        #        foreign_keytbl[0],
-        #        foreign_keytbl[1]))
+    #    #for cnt, foreign_keytbl in enumerate(foreign_keytbl_list):
+    #    #    strlist.append("ALTER TABLE {}_{} ADD CONSTRAINT {}_fk_{}_{} FOREIGN KEY ({}) references {};".format(
+    #    #        name,
+    #    #        idx,
+    #    #        name,
+    #    #        idx,
+    #    #        cnt,
+    #    #        foreign_keytbl[0],
+    #    #        foreign_keytbl[1]))
 
-    # create merge/replica table def
-    strlist.append("CREATE {} TABLE {} ({});".format(
-        typ,
-        name,
-        schema))
+    ## create merge/replica table def
+    #strlist.append("CREATE {} TABLE {} ({});".format(
+    #    typ,
+    #    name,
+    #    schema))
 
-    strlist.append("ALTER TABLE {} ADD CONSTRAINT {}_pk PRIMARY KEY ({});".format(
-        name,
-        name,
-        primary_key))
+    #strlist.append("ALTER TABLE {} ADD CONSTRAINT {}_pk PRIMARY KEY ({});".format(
+    #    name,
+    #    name,
+    #    primary_key))
 
-    #for cnt, foreign_keytbl in enumerate(foreign_keytbl_list):
-    #    strlist.append("ALTER TABLE {} ADD CONSTRAINT {}_fk_{} FOREIGN KEY ({}) references {};".format(
-    #        name,
-    #        name,
-    #        cnt,
-    #        foreign_keytbl[0],
-    #        foreign_keytbl[1]))
+    for cnt, foreign_keytbl in enumerate(foreign_keytbl_list):
+        strlist.append("ALTER TABLE {} ADD CONSTRAINT {}_fk_{} FOREIGN KEY ({}) references {};".format(
+            name + f"_{follower_num}",
+            name + f"_{follower_num}",
+            cnt,
+            foreign_keytbl[0],
+            foreign_keytbl[1] + f"_{follower_num}"))
 
     # add shards to table
-    for idx in range(1, worker_num + 1):
-        strlist.append("ALTER TABLE {} ADD TABLE {}_{};".format(name, name, idx))
+    #for idx in range(1, worker_num + 1):
+    #    strlist.append("ALTER TABLE {} ADD TABLE {}_{};".format(name, name, idx))
 
 for item in strlist:
     print(item)

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 source remote-helper.sh
 
@@ -9,6 +9,7 @@ usage() {
     echo "  Connect to N workers and set them up on a specific platform"
 }
 
+script_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]:-${(%):-%x}}")")"
 ip_addr_arr=()
 scaling_factor=
 num_workers=
@@ -53,10 +54,10 @@ fi
 disk_space=$(($(($scaling_factor/$num_workers))*3+20))
 echo "$disk_space GB of disk space per instance"
 
-IP_ADDR_FILE=$PWD/follower-ipaddrs.txt
+IP_ADDR_FILE=$script_dir/follower-ipaddrs.txt
 case "$platform" in
     gcp)
-        ./gcp/spawn-followers.sh --num_nodes $num_workers --disk_sz_gb $disk_space --ipaddr_file $IP_ADDR_FILE
+        $script_dir/gcp-scripts/spawn-followers.sh --num_nodes $num_workers --disk_sz_gb $disk_space --ipaddr_file $IP_ADDR_FILE
         ;;
     aws)
         echo "AWS platform not implemented yet"
@@ -115,6 +116,7 @@ monetdbd start ~/leader-dbfarm
 monetdb create leader-db
 monetdb release leader-db
 
+echo "DEBUG: Early exit"
 exit 0
 
 # setup constraints for the shard tables
